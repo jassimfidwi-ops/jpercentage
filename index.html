@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Percent Of</title>
+<meta name="description" content="Enter two numbers and see what percent the first is of the second.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #CBCED8;
+    --shell: rgba(240, 241, 246, .62);
+    --panel: rgba(250, 251, 253, .82);
+    --chip: #F4F5F9;
+    --ink: #0C0C10;
+    --muted: #5F6372;
+    --periwinkle: #7A92E4;
+    --coral: #EC6B6B;
+    --line: rgba(12, 12, 16, .14);
+    --spring: cubic-bezier(.34, 1.4, .5, 1);
+  }
+  html { background: var(--bg); }
+  body {
+    margin: 0; min-height: 100vh;
+    color: var(--ink);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    line-height: 1.7;
+    background:
+      radial-gradient(60rem 36rem at 85% -10%, rgba(255, 255, 255, .85), transparent 60%),
+      radial-gradient(55rem 40rem at 0% 105%, rgba(122, 146, 228, .38), transparent 62%),
+      radial-gradient(40rem 30rem at 100% 100%, rgba(236, 107, 107, .12), transparent 60%),
+      linear-gradient(160deg, #D5D7DF, #C4C8D6);
+  }
+  .display { font-family: 'Outfit', system-ui, sans-serif; letter-spacing: -0.03em; font-weight: 500; }
+
+  /* base layer: the frosted shell */
+  .shell {
+    background: var(--shell);
+    border: 1px solid rgba(255, 255, 255, .7);
+    border-radius: 2.75rem;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, .9) inset,
+      0 30px 60px -28px rgba(60, 70, 110, .35),
+      0 80px 120px -60px rgba(60, 70, 110, .3);
+  }
+  /* elevated layer: content panels with generous, uneven-feeling radii */
+  .panel {
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, .85);
+    border-radius: 2.25rem 2.25rem 2.25rem 1.1rem;
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 2px 3px rgba(60, 70, 110, .06),
+      0 18px 36px -16px rgba(60, 70, 110, .28);
+  }
+  .panel.alt { border-radius: 2.25rem 1.1rem 2.25rem 2.25rem; }
+  /* floating layer: circular chips */
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--chip);
+    border: 1px solid rgba(255, 255, 255, .9);
+    border-radius: 999px;
+    box-shadow: 0 1px 0 #fff inset, 0 8px 18px -8px rgba(60, 70, 110, .35);
+  }
+  .chip-dot { width: 2.75rem; height: 2.75rem; }
+
+  .pill-active { background: var(--ink); color: #fff; border-radius: 999px; padding: .55rem 1.4rem; font-weight: 500; font-size: .95rem; box-shadow: 0 10px 20px -8px rgba(12, 12, 16, .5); }
+
+  .sentence { font-size: clamp(1.6rem, 3.6vw, 2.3rem); line-height: 1.5; }
+  .field {
+    display: inline-block; vertical-align: middle;
+    width: 3.4ch; max-width: 100%;
+    padding: .1em .45em; margin: .1em .05em;
+    font: inherit; font-weight: 500; color: var(--ink); letter-spacing: inherit;
+    text-align: center;
+    background: var(--chip);
+    border: 1px solid rgba(255, 255, 255, .95);
+    border-radius: 999px;
+    box-shadow: 0 1px 0 #fff inset, 0 8px 16px -8px rgba(60, 70, 110, .4), 0 0 0 1px var(--line);
+    outline: none;
+    -moz-appearance: textfield;
+    transition: transform .25s var(--spring), box-shadow .2s ease;
+  }
+  .field::-webkit-outer-spin-button, .field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .field::placeholder { color: rgba(95, 99, 114, .45); }
+  .field:hover { transform: translateY(-1px); }
+  .field:focus-visible { box-shadow: 0 1px 0 #fff inset, 0 0 0 2px var(--ink), 0 12px 22px -8px rgba(12, 12, 16, .35); }
+  .field:active { transform: scale(.98); }
+  .field[aria-invalid="true"] { box-shadow: 0 0 0 2px var(--coral); }
+
+  .result-num { font-size: clamp(4.5rem, 16vw, 8.5rem); line-height: 1; font-variant-numeric: tabular-nums; }
+  .result-num sup { font-size: .4em; vertical-align: top; position: relative; top: .15em; margin-left: .05em; font-weight: 400; color: var(--muted); }
+
+  .track { position: relative; height: 1.1rem; background: rgba(12, 12, 16, .07); border-radius: 999px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(12, 12, 16, .12); }
+  .fill {
+    position: absolute; inset: 0; border-radius: 999px;
+    background: linear-gradient(90deg, var(--periwinkle), #5B73D6);
+    transform-origin: left center; transform: scaleX(0);
+    transition: transform .7s var(--spring);
+  }
+  .fill.over { background: linear-gradient(90deg, var(--periwinkle), var(--coral)); }
+  .ticks { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: .5rem; }
+
+  /* connector between the two panels, like the flow lines in the reference */
+  .connector { display: none; }
+  @media (min-width: 1024px) {
+    .connector { display: block; position: absolute; left: calc((100% - 1.5rem) * .5238 + .75rem - 1.4rem); top: 50%; width: 2.8rem; height: 3.2rem; transform: translateY(-50%); z-index: 2; pointer-events: none; }
+  }
+
+  /* moving-border button: a glow orbits the outline */
+  .orbit-btn {
+    position: relative; overflow: hidden; cursor: pointer;
+    padding: 1.5px; border: 0; border-radius: 999px;
+    background: rgba(12, 12, 16, .16);
+    font: inherit; font-weight: 500; color: var(--ink);
+    transition: transform .25s var(--spring);
+  }
+  .orbit-track { position: absolute; inset: 0; border-radius: inherit; }
+  .orbit-track svg { position: absolute; width: 100%; height: 100%; }
+  .orbit-blob {
+    position: absolute; top: 0; left: 0; width: 4.5rem; height: 4.5rem;
+    background: radial-gradient(var(--periwinkle) 35%, var(--coral) 55%, transparent 70%);
+    will-change: transform;
+  }
+  .orbit-face {
+    position: relative; display: flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .7rem 1.5rem; border-radius: 999px;
+    background: var(--chip); transition: background-color .2s ease, color .2s ease;
+  }
+  .orbit-btn:hover { transform: translateY(-2px); }
+  .orbit-btn:hover .orbit-face { background: var(--ink); color: #fff; }
+  .orbit-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .orbit-btn:active { transform: translateY(1px) scale(.97); }
+
+  .msg { min-height: 1.7em; color: var(--muted); }
+  .msg.err { color: #C03F3F; font-weight: 500; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fill, .orbit-btn, .field { transition: none; }
+    .orbit-blob { display: none; }
+    .orbit-btn { background: var(--ink); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .intro { animation: rise .9s var(--spring) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+<main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-14">
+  <div class="shell intro p-5 sm:p-8 lg:p-10">
+
+    <header class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="chip chip-dot" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        </span>
+        <span class="display text-2xl">percent<span style="color:var(--muted)">of</span></span>
+      </div>
+      <span class="pill-active">Percentage</span>
+    </header>
+
+    <h1 class="display mt-10 mb-8 text-4xl sm:text-5xl">Percentage calculator</h1>
+
+    <div class="relative grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+
+      <form id="calc" class="panel p-6 sm:p-9" autocomplete="off" novalidate>
+        <p class="m-0 mb-5 text-sm" style="color:var(--muted)">Your numbers</p>
+        <p class="sentence display m-0">
+          <label for="a" class="sr-only">First number</label><input id="a" class="field" type="number" inputmode="decimal" step="any" placeholder="45" aria-describedby="status">
+          is what percent of
+          <label for="b" class="sr-only">Second number</label><input id="b" class="field" type="number" inputmode="decimal" step="any" placeholder="60" aria-describedby="status">?
+        </p>
+        <p id="status" class="msg mt-6 mb-0 max-w-md" role="status" aria-live="polite">Type two numbers. The answer updates as you go.</p>
+      </form>
+
+      <svg class="connector" viewBox="0 0 100 60" fill="none" aria-hidden="true">
+        <path d="M4 30 C 40 30, 55 12, 96 12" stroke="#7A92E4" stroke-width="1.2"/>
+        <path d="M4 30 C 40 30, 55 48, 96 48" stroke="#EC6B6B" stroke-width="1.2" stroke-dasharray="3 3"/>
+        <circle cx="4" cy="30" r="3.5" fill="#F4F5F9" stroke="#7A92E4" stroke-width="1.5"/>
+        <circle cx="96" cy="12" r="3.5" fill="#F4F5F9" stroke="#7A92E4" stroke-width="1.5"/>
+        <circle cx="96" cy="48" r="3.5" fill="#F4F5F9" stroke="#EC6B6B" stroke-width="1.5"/>
+      </svg>
+
+      <section class="panel alt p-6 sm:p-9" aria-labelledby="res-label">
+        <h2 id="res-label" class="m-0 mb-1 text-sm font-normal" style="color:var(--muted)">Result</h2>
+        <p class="display result-num m-0" id="result" aria-hidden="true">0<sup>%</sup></p>
+        <p id="sentence-out" class="mt-2 mb-7 max-w-md text-lg" style="color:var(--muted)">Your result appears here.</p>
+
+        <div class="track" role="img" id="bar-label" aria-label="Progress bar showing 0 percent">
+          <div class="fill" id="fill"></div>
+        </div>
+        <div class="ticks" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+
+        <div class="mt-8">
+          <button type="button" id="clear" class="orbit-btn">
+            <span class="orbit-track" aria-hidden="true">
+              <svg preserveAspectRatio="none"><rect id="orbit-path" width="100%" height="100%" rx="50%" ry="50%" fill="none"/></svg>
+              <span class="orbit-blob" id="orbit-blob"></span>
+            </span>
+            <span class="orbit-face">Clear both numbers</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="mx-auto mt-8 max-w-xl px-2 text-center text-sm" style="color:var(--muted)">
+    <p class="m-0">Built on open web standards: plain HTML, CSS and one small script. It runs in your browser, so nothing you type leaves your device.</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var a = document.getElementById('a'), b = document.getElementById('b');
+  var result = document.getElementById('result'), out = document.getElementById('sentence-out');
+  var fill = document.getElementById('fill'), bar = document.getElementById('bar-label');
+  var status = document.getElementById('status'), clear = document.getElementById('clear');
+  var fmt = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+  var fmtPct = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2, useGrouping: true });
+
+  function size(el) {
+    el.style.width = Math.max(3.4, (el.value.length || el.placeholder.length) + 1.2) + 'ch';
+  }
+  function setStatus(text, err) {
+    status.textContent = text;
+    status.classList.toggle('err', !!err);
+  }
+  function show(pctText, sentence, ratio, over) {
+    result.innerHTML = pctText + '<sup>%</sup>';
+    out.textContent = sentence;
+    fill.style.transform = 'scaleX(' + ratio + ')';
+    fill.classList.toggle('over', over);
+    bar.setAttribute('aria-label', 'Progress bar showing ' + pctText + ' percent');
+  }
+
+  function update() {
+    size(a); size(b);
+    a.removeAttribute('aria-invalid'); b.removeAttribute('aria-invalid');
+    var hasA = a.value.trim() !== '', hasB = b.value.trim() !== '';
+    if (!hasA || !hasB) {
+      show('0', 'Your result appears here.', 0, false);
+      setStatus('Type two numbers. The answer updates as you go.', false);
+      return;
+    }
+    var x = a.valueAsNumber, y = b.valueAsNumber;
+    if (!isFinite(x) || !isFinite(y)) {
+      show('0', 'Your result appears here.', 0, false);
+      setStatus('Enter valid numbers, for example 45 and 60.', true);
+      return;
+    }
+    if (y === 0) {
+      b.setAttribute('aria-invalid', 'true');
+      show('0', 'Your result appears here.', 0, false);
+      setStatus('The second number can’t be 0. A percentage needs something to compare against.', true);
+      return;
+    }
+    var pct = (x / y) * 100;
+    var text = fmtPct.format(pct);
+    var ratio = Math.min(Math.max(pct / 100, 0), 1);
+    var sentence = fmt.format(x) + ' is ' + text + '% of ' + fmt.format(y) + '.';
+    show(text, sentence, ratio, pct > 100);
+    setStatus(pct > 100 ? 'The first number is larger than the second, so the result is above 100%. The bar stops at 100%.'
+            : pct < 0 ? 'A negative number gives a negative percentage. The bar stays at 0%.'
+            : 'Calculated as ' + fmt.format(x) + ' ÷ ' + fmt.format(y) + ' × 100.', false);
+  }
+
+  a.addEventListener('input', update);
+  b.addEventListener('input', update);
+  document.getElementById('calc').addEventListener('submit', function (e) { e.preventDefault(); update(); });
+  clear.addEventListener('click', function () { a.value = ''; b.value = ''; update(); a.focus(); });
+
+  // Moving border: slide the glow along the button outline (transform only)
+  var path = document.getElementById('orbit-path'), blob = document.getElementById('orbit-blob');
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var duration = 3000;
+    (function tick(t) {
+      var len = path.getTotalLength();
+      if (len) {
+        var pt = path.getPointAtLength((t / duration * len) % len);
+        blob.style.transform = 'translate(' + pt.x + 'px,' + pt.y + 'px) translate(-50%,-50%)';
+      }
+      requestAnimationFrame(tick);
+    })(0);
+  }
+  update();
+})();
+</script>
+</body>
+</html>
